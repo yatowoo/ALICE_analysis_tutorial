@@ -80,7 +80,11 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
 
     // example of a histogram
     fHistPt = new TH1F("fHistPt", "fHistPt", 100, 0, 10);       // create your histogra
+    fHistVertexZ = new TH1F("fHistVZ", "fHistVertexZ", 100, 0, 10);
+    fHistCentral = new TH1F("fHistC", "fHistCentrality", 100, 0, 1.0);
     fOutputList->Add(fHistPt);          // don't forget to add it to the list! the list will be written to file, so if you want
+    fOutputList->Add(fHistVertexZ);
+    fOutputList->Add(fHistCentral);
                                         // your histogram in the output file, add it to the list!
     
     PostData(1, fOutputList);           // postdata will notify the analysis manager of changes / updates to the 
@@ -107,6 +111,10 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
         if(!track || !track->TestFilterBit(1)) continue;                            // if we failed, skip this track
         fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
     }                                                   // continue until all the tracks are processed
+    float vertexZ = fAOD->GetPrimaryVertex()->GetZ();
+    fHistVertexZ->Fill(vertexZ);
+    float centrality = fAOD->GetCentrality()->GetCentralityPercentile("V0M");
+    fHistCentral->Fill(centrality);
     PostData(1, fOutputList);                           // stream the results the analysis of this event to
                                                         // the output manager which will take care of writing
                                                         // it to a file
