@@ -80,8 +80,8 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
 
     // example of a histogram
     fHistPt = new TH1F("fHistPt", "fHistPt", 100, 0, 10);       // create your histogra
-    fHistVertexZ = new TH1F("fHistVZ", "fHistVertexZ", 100, 0, 10);
-    fHistCentral = new TH1F("fHistC", "fHistCentrality", 100, 0, 1.0);
+    fHistVertexZ = new TH1F("fHistVZ", "fHistVertexZ", 100, -20, 20);
+    fHistCentral = new TH1F("fHistC", "fHistCentrality", 50, -2, 2);
     fOutputList->Add(fHistPt);          // don't forget to add it to the list! the list will be written to file, so if you want
     fOutputList->Add(fHistVertexZ);
     fOutputList->Add(fHistCentral);
@@ -115,7 +115,8 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     fHistVertexZ->Fill(vertexZ);
     float centrality = fAOD->GetCentrality()->GetCentralityPercentile("V0M");
     fHistCentral->Fill(centrality);
-    PostData(1, fOutputList);                           // stream the results the analysis of this event to
+    //printf("[+] DEBUG - VertexZ: %f, Centrality : %f\n", vertexZ, centrality);
+		PostData(1, fOutputList);                           // stream the results the analysis of this event to
                                                         // the output manager which will take care of writing
                                                         // it to a file
 }

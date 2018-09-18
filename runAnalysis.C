@@ -50,7 +50,7 @@ void runAnalysis()
         // if you want to run locally, we need to define some input
         TChain* chain = new TChain("aodTree");
         // add a few files to the chain (change this so that your local files are added)
-        chain->Add("/mnt/d/_Temp/AliAOD.root");
+        chain->Add("/data2/ytwu/DATA/exp/ALICE/AliAOD.root");
         // start the analysis locally, reading the events from the tchain
         mgr->StartAnalysis("local", chain);
     } else {
