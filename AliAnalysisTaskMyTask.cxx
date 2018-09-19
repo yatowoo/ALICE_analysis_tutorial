@@ -82,10 +82,14 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
     fHistPt = new TH1F("fHistPt", "fHistPt", 100, 0, 10);       // create your histogra
     fHistVertexZ = new TH1F("fHistVZ", "fHistVertexZ", 100, -20, 20);
     fHistCentral = new TH1F("fHistC", "fHistCentrality", 50, -2, 2);
+		fHistEta = new TH1F("hEta","fHistEta",100,-5,5);
+		fHistPhi = new TH1F("hPhi","fHistPhi",100,0,2*TMath::Pi());
     fOutputList->Add(fHistPt);          // don't forget to add it to the list! the list will be written to file, so if you want
     fOutputList->Add(fHistVertexZ);
     fOutputList->Add(fHistCentral);
                                         // your histogram in the output file, add it to the list!
+		fOutputList->Add(fHistEta);
+		fOutputList->Add(fHistPhi);
     
     PostData(1, fOutputList);           // postdata will notify the analysis manager of changes / updates to the 
                                         // fOutputList object. the manager will in the end take care of writing your output to file
@@ -108,9 +112,12 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     Int_t iTracks(fAOD->GetNumberOfTracks());           // see how many tracks there are in the event
     for(Int_t i(0); i < iTracks; i++) {                 // loop ove rall these tracks
         AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
-        if(!track || !track->TestFilterBit(1)) continue;                            // if we failed, skip this track
+        if(!track || !track->TestFilterBit(512)) continue;                            // if we failed, skip this track
         fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
-    }                                                   // continue until all the tracks are processed
+     		fHistEta->Fill(track->Eta());
+				fHistPhi->Fill(track->Phi());
+		}                                                   // continue until all the tracks are processed
+
     float vertexZ = fAOD->GetPrimaryVertex()->GetZ();
     fHistVertexZ->Fill(vertexZ);
     float centrality = fAOD->GetCentrality()->GetCentralityPercentile("V0M");
