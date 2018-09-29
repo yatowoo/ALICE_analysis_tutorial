@@ -5,3 +5,6 @@
 *.root
 *.xml
 *.pcm
+.vscode/
+Util.C
+run.log

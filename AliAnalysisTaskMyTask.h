@@ -7,6 +7,8 @@
 
 #include "AliAnalysisTaskSE.h"
 
+#include<map>
+
 class AliAnalysisTaskMyTask : public AliAnalysisTaskSE  
 {
     public:
@@ -22,7 +24,9 @@ class AliAnalysisTaskMyTask : public AliAnalysisTaskSE
         AliAODEvent*            fAOD;           //! input event
         TList*                  fOutputList;    //! output list
         TH1F*                   fHistPt;        //! dummy histogram
-
+        TH1I*                   fHistTriggerOffline; // BITs in offline trigger
+        TH1F*                   fHistTriggerClass; // Trigger class codes
+        std::map<TString, ULong_t>  fTriggerCounter;      // Counter for fired trigger classes
         AliAnalysisTaskMyTask(const AliAnalysisTaskMyTask&); // not implemented
         AliAnalysisTaskMyTask& operator=(const AliAnalysisTaskMyTask&); // not implemented
 

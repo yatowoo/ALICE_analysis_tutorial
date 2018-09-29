@@ -35,15 +35,17 @@ using namespace std;            // std namespace: so you can do things like 'cou
 ClassImp(AliAnalysisTaskMyTask) // classimp: necessary for root
 
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask() : AliAnalysisTaskSE(), 
-    fAOD(0), fOutputList(0), fHistPt(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
 }
 //_____________________________________________________________________________
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask(const char* name) : AliAnalysisTaskSE(name),
-    fAOD(0), fOutputList(0), fHistPt(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0)
 {
+    if(!fTriggerCounter.empty())
+        fTriggerCounter.clear();
     // constructor
     DefineInput(0, TChain::Class());    // define the input of the analysis: in this case we take a 'chain' of events
                                         // this chain is created by the analysis manager, so no need to worry about it, 
@@ -60,6 +62,8 @@ AliAnalysisTaskMyTask::~AliAnalysisTaskMyTask()
     if(fOutputList) {
         delete fOutputList;     // at the end of your task, it is deleted from memory by calling this function
     }
+    if(!fTriggerCounter.empty())
+        fTriggerCounter.clear();
 }
 //_____________________________________________________________________________
 void AliAnalysisTaskMyTask::UserCreateOutputObjects()
@@ -80,6 +84,10 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
 
     // example of a histogram
     fHistPt = new TH1F("fHistPt", "fHistPt", 100, 0, 10);       // create your histogra
+    fHistTriggerOffline = new TH1I("hTrig", "BITs in Offline Trigger", 32, 0, 32);
+    fHistTriggerClass = new TH1F("hTC","Trigger class codes", 3, 0, 3);
+    fOutputList->Add(fHistTriggerClass);
+    fOutputList->Add(fHistTriggerOffline);
     fOutputList->Add(fHistPt);          // don't forget to add it to the list! the list will be written to file, so if you want
                                         // your histogram in the output file, add it to the list!
     
@@ -88,6 +96,7 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
                                         // so it needs to know what's in the output
 }
 //_____________________________________________________________________________
+#include<iostream>
 void AliAnalysisTaskMyTask::UserExec(Option_t *)
 {
     // user exec
@@ -106,15 +115,56 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
         AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
         if(!track || !track->TestFilterBit(1)) continue;                            // if we failed, skip this track
         fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
-    }                                                   // continue until all the tracks are processed
+    }
+    
+    // Fill offline trigger histogram
+    ULong64_t  trigOffline = static_cast<AliVAODHeader*>(fAOD->GetHeader())->GetOfflineTrigger();
+        // DEBUG
+    cout << "[-] EXTRACT - Offline Trigger : " << hex << trigOffline << endl;
+    if(!trigOffline) fHistTriggerOffline->Fill(0);
+    cout << "\t\t";
+    for(int i = 0 ; i < 32 && (trigOffline>>i); i++){
+        if((trigOffline >> i) % 2){
+            cout << dec << i << " ";
+            fHistTriggerOffline->Fill(i);
+        }
+    }// Loop for all bits
+    cout << endl;
+    // END - Fill offline trigger histogram
+
+    // Handle string of fired trigger classes
+    TString trigClassed = fAOD->GetFiredTriggerClasses();
+    TObjArray* arr = trigClassed.Tokenize(" ");
+    for(int i = 0; i < arr->GetEntries(); i++){
+        TObjString* token = (TObjString*)(arr->At(i));
+        fTriggerCounter[token->String()] ++;
+        fHistTriggerClass->Fill(token->String(), 1);
+    }
+    arr->Delete();
+    delete arr;
+    // END - Handle string of fired trigger classes
+
+                                                       // continue until all the tracks are processed
     PostData(1, fOutputList);                           // stream the results the analysis of this event to
                                                         // the output manager which will take care of writing
                                                         // it to a file
+
+    // Test - extract info. from AOD event
+    cout << "[-] EXTRACT - TriggerMask : " << hex << fAOD->GetTriggerMask() << endl;
+    cout << "[-] EXTRACT - TriggerMaskNext50 : " << hex << fAOD->GetTriggerMaskNext50() << endl;
+    cout << "[-] EXTRACT - TriggerCluster : " << dec << int(fAOD->GetTriggerCluster()) << endl;
+    cout << "[-] EXTRACT - FiredTriggerClasses : " << fAOD->GetFiredTriggerClasses() << endl;
 }
 //_____________________________________________________________________________
 void AliAnalysisTaskMyTask::Terminate(Option_t *)
 {
     // terminate
     // called at the END of the analysis (when all events are processed)
+    cout << "[-] EXTRACT - Fired Trigger Classed Counter" << endl;
+    for(std::map<TString, ULong_t>::iterator iter = fTriggerCounter.begin();
+        iter != fTriggerCounter.end(); iter++)
+    {
+        cout << "\t" << iter->first << "\t" << iter->second << endl;
+    }
 }
 //_____________________________________________________________________________
