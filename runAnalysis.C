@@ -8,9 +8,9 @@
 void runAnalysis()
 {
     // set if you want to run the analysis locally (kTRUE), or on grid (kFALSE)
-    Bool_t local = kTRUE;
+    Bool_t local = kFALSE;
     // if you run on grid, specify test mode (kTRUE) or full grid model (kFALSE)
-    Bool_t gridTest = kTRUE;
+    Bool_t gridTest = kFALSE;
     
     // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
@@ -63,16 +63,16 @@ void runAnalysis()
         alienHandler->SetAnalysisSource("AliAnalysisTaskMyTask.cxx");
         // select the aliphysics version. all other packages
         // are LOADED AUTOMATICALLY!
-        alienHandler->SetAliPhysicsVersion("vAN-20160330-2");
+        alienHandler->SetAliPhysicsVersion("vAN-20180305-1");
         // set the Alien API version
         alienHandler->SetAPIVersion("V1.1x");
         // select the input data
-        alienHandler->SetGridDataDir("/alice/data/2011/LHC11h_2");
-        alienHandler->SetDataPattern("*ESDs/pass2/AOD145/*AOD.root");
+        alienHandler->SetGridDataDir("/alice/data/2016/LHC16l");
+        alienHandler->SetDataPattern("*/pass1/AOD/*AOD.root");
         // MC has no prefix, data has prefix 000
         alienHandler->SetRunPrefix("000");
         // runnumber
-        alienHandler->AddRunNumber(167813);
+        alienHandler->AddRunNumber("259888 259868 259867 259866 259860 259842 259841 259822 259788 259781 259756 259752 259751 259750 259748 259747 259711 259704 259703 259697 259668 259650 259649 259477 259473 259396 259395 259394 259389 259388 259382 259378 259342 259341 259340 259339 259336 259334 259307 259305 259302 259274 259273 259272 259271 259270 259269 259263 259164 259118 259117 259099 259096 259091 259090 259088 258964 258962");
         // number of files per subjob
         alienHandler->SetSplitMaxInputFileNumber(40);
         alienHandler->SetExecutable("myTask.sh");

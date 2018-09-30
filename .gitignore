@@ -8,3 +8,6 @@
 .vscode/
 Util.C
 run.log
+myTask*
+myAnalysis*
+stderr
