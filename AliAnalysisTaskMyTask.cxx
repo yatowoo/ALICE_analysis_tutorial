@@ -81,21 +81,22 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
     // example of a histogram
     fHistPt = new TH1F("fHistPt", "fHistPt", 100, 0, 10);       // create your histogra
     fHistTriggerOffline = new TH1I("hTrig", "BITs in Offline Trigger", 32, 0, 32);
+        // Alphanumeric
     fHistTriggerClass = new TH1F("hTC","Trigger class codes", 3, 0, 3);
-    fHistTrackEta = new TH1F("hEta","Eta of tracks", 200, -10, 10);
+    fHistTrackEta = new TH1F("hEta","Eta of tracks", 1000, -5, 5);
     fHistTpcNClusters = new TH1I("hTpcNcls", "Number of TPC clusters",160, 0, 160);
-    fHistTpcChi2PerCluster = new TH1F("hTpcChi2", "TPC chi-square per cluster", 1000, 0, 1000);
+    fHistTpcChi2PerCluster = new TH1F("hTpcChi2", "TPC chi-square per cluster", 2000, 0, 20);
     fHistDcaX = new TH1F("hDcaX", "Track DCA X position (kIsDCA)", 200, -10, 10);
     fHistDcaY = new TH1F("hDcaY", "Track DCA Y position (kIsDCA)", 200, -10, 10);
-    fHistDcaZ = new TH1F("hDcaZ", "Track DCA Z position (kIsDCA)", 200, -10, 10);
+    fHistDcaZ = new TH1F("hDcaZ", "Track DCA Z position (kIsDCA)", 1000, -50, 50);
     fHistDcaXY = new TH1F("hDcaXY", "Track DCA XY length (kIsDCA)", 200, 0, 20);
-    fHistVertexZ = new TH1F("hVtxZ", "Primary vertex Z",200, -100, 100);
-    fHistVertexZSpd = new TH1F("hVtxZSpd", "Primary vertex Z (SPD)",200, -100, 100);
-    fHistVertexZTpc = new TH1F("hVtxZTpc", "Primary vertex Z (TPC)",200, -100, 100);
-    fHistMultNtracklets = new TH1F("hMultNtr", "Multiplicity with number of tracklets", 1000, 0, 1000);
-    fHistMultESDTracks = new TH1F("hMultESD", "Multiplicity with number of ESD tracks", 1000, 0, 1000);
-    fHistMultV0A = new TH1F("hMultV0A", "Multiplicity with number of V0 amplitude - A side", 1000, 0, 1000);
-    fHistMultV0C = new TH1F("hMultV0C", "Multiplicity with number of V0 amplitude - C side", 1000, 0, 1000);
+    fHistVertexZ = new TH1F("hVtxZ", "Primary vertex Z",1000, -50, 50);
+    fHistVertexZSpd = new TH1F("hVtxZSpd", "Primary vertex Z (SPD)",1000, -50, 50);
+    fHistVertexZTpc = new TH1F("hVtxZTpc", "Primary vertex Z (TPC)",1000, -50, 50);
+    fHistMultNtracklets = new TH1F("hMultNtr", "Multiplicity with number of tracklets", 200, 0, 200);
+    fHistMultESDTracks = new TH1F("hMultESD", "Multiplicity with number of ESD tracks", 2000, 0, 2000);
+    fHistMultV0A = new TH1F("hMultV0A", "Multiplicity with number of V0 amplitude - A side", 200, 0, 200);
+    fHistMultV0C = new TH1F("hMultV0C", "Multiplicity with number of V0 amplitude - C side", 500, 0, 500);
     fOutputList->Add(fHistTrackEta);
     fOutputList->Add(fHistTpcNClusters);
     fOutputList->Add(fHistTpcChi2PerCluster);
@@ -138,15 +139,14 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     for(Int_t i(0); i < iTracks; i++) {                 // loop ove rall these tracks
         AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
         if(!track) continue;
-        if(track->TestFilterBit(AliAODTrack::kTrkTPCOnly)){                 // Pre-defined trackt cut
-            fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
-            fHistTrackEta->Fill(track->Eta());
-            fHistTpcNClusters->Fill(track->GetTPCNcls());
-            if(track->GetTPCNcls() > 0)
-                fHistTpcChi2PerCluster->Fill(track->GetTPCchi2()/track->GetTPCNcls());
-            else
-                fHistTpcChi2PerCluster->Fill(-1); // under flow - Bin(0)
-        }// END - TPC only tracks
+
+        fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
+        fHistTrackEta->Fill(track->Eta());
+        fHistTpcNClusters->Fill(track->GetTPCNcls());
+        if(track->GetTPCNcls() > 0)
+            fHistTpcChi2PerCluster->Fill(track->GetTPCchi2()/track->GetTPCNcls());
+        else
+            fHistTpcChi2PerCluster->Fill(-1); // under flow - Bin(0)
 
         // Check DCA to avoid dummy values
         if(track->TestBit(AliAODTrack::kIsDCA)){
@@ -187,7 +187,9 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     TObjArray* arr = trigClassed.Tokenize(" ");
     for(int i = 0; i < arr->GetEntries(); i++){
         TObjString* token = (TObjString*)(arr->At(i));
-        fHistTriggerClass->Fill(token->String(), 1);
+        TString tccode = token->String();
+        TString descriptor = tccode(0,tccode.First("-")); 
+        fHistTriggerClass->Fill(descriptor, 1);
     }
     arr->Delete();
     delete arr;
