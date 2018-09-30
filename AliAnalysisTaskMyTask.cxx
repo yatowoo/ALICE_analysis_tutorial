@@ -35,14 +35,14 @@ using namespace std;            // std namespace: so you can do things like 'cou
 ClassImp(AliAnalysisTaskMyTask) // classimp: necessary for root
 
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask() : AliAnalysisTaskSE(), 
-    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0), fH2MultVtxZ(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
 }
 //_____________________________________________________________________________
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask(const char* name) : AliAnalysisTaskSE(name),
-    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0), fH2MultVtxZ(0)
 {
     // constructor
     DefineInput(0, TChain::Class());    // define the input of the analysis: in this case we take a 'chain' of events
@@ -97,6 +97,7 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
     fHistMultESDTracks = new TH1F("hMultESD", "Multiplicity with number of ESD tracks", 2000, 0, 2000);
     fHistMultV0A = new TH1F("hMultV0A", "Multiplicity with number of V0 amplitude - A side", 200, 0, 200);
     fHistMultV0C = new TH1F("hMultV0C", "Multiplicity with number of V0 amplitude - C side", 500, 0, 500);
+    fH2MultVtxZ = new TH2F("h2MultVtxZ", "Multiplicity vs Vertex Z", 1000, -50, 50, 200, 0, 200);
     fOutputList->Add(fHistTrackEta);
     fOutputList->Add(fHistTpcNClusters);
     fOutputList->Add(fHistTpcChi2PerCluster);
@@ -111,6 +112,7 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
     fOutputList->Add(fHistMultESDTracks);
     fOutputList->Add(fHistMultV0A);
     fOutputList->Add(fHistMultV0C);
+    fOutputList->Add(fH2MultVtxZ);
     fOutputList->Add(fHistTriggerClass);
     fOutputList->Add(fHistTriggerOffline);
     fOutputList->Add(fHistPt);          // don't forget to add it to the list! the list will be written to file, so if you want
@@ -162,15 +164,19 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     }// END - Track
     
     // Primary vertex
-    fHistVertexZ->Fill(fAOD->GetPrimaryVertex()->GetZ());
+    Double_t vtxZ = fAOD->GetPrimaryVertex()->GetZ();
+    fHistVertexZ->Fill(vtxZ);
     fHistVertexZSpd->Fill(fAOD->GetPrimaryVertexSPD()->GetZ());
     fHistVertexZTpc->Fill(fAOD->GetPrimaryVertexTPC()->GetZ());
 
     // Multiplicity
-    fHistMultNtracklets->Fill(fAOD->GetMultiplicity()->GetNumberOfTracklets());
+    Double_t mult = fAOD->GetMultiplicity()->GetNumberOfTracklets();
+    fHistMultNtracklets->Fill(mult);
     fHistMultESDTracks->Fill(fAOD->GetNumberOfESDTracks());
     fHistMultV0A->Fill(fAOD->GetVZEROData()->GetMTotV0A());
     fHistMultV0C->Fill(fAOD->GetVZEROData()->GetMTotV0C());
+
+    fH2MultVtxZ->Fill(vtxZ, mult);
 
     // Fill offline trigger histogram
     ULong64_t  trigOffline = static_cast<AliVAODHeader*>(fAOD->GetHeader())->GetOfflineTrigger();
