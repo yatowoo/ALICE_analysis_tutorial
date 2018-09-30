@@ -26,7 +26,20 @@ class AliAnalysisTaskMyTask : public AliAnalysisTaskSE
         TH1F*                   fHistPt;        //! dummy histogram
         TH1I*                   fHistTriggerOffline; // BITs in offline trigger
         TH1F*                   fHistTriggerClass; // Trigger class codes
-        std::map<TString, ULong_t>  fTriggerCounter;      // Counter for fired trigger classes
+        TH1F*                   fHistTrackEta;  // Eta of tracks
+        TH1I*                   fHistTpcNClusters; // TPC Cluster numbers for each track
+        TH1F*                   fHistTpcChi2PerCluster; // TPC Chi-square per cluster
+        TH1F*                   fHistDcaX;      // DCA X of track kIsDCA
+        TH1F*                   fHistDcaY;      // DCA X of track kIsDCA
+        TH1F*                   fHistDcaZ;      // DCA X of track kIsDCA
+        TH1F*                   fHistDcaXY;      // DCA \sqrt(X^2+Y^2) of track kIsDCA
+        TH1F*                   fHistVertexZ;   // Primary Vertex Z
+        TH1F*                   fHistVertexZSpd;   // TPC Primary Vertex Z
+        TH1F*                   fHistVertexZTpc;   // SPD Primary Vertex Z
+        TH1F*                   fHistMultNtracklets;   // Number of tracklets
+        TH1F*                   fHistMultESDTracks;   // Number of ESD tracks
+        TH1F*                   fHistMultV0A;   // Number of tracklets
+        TH1F*                   fHistMultV0C;   // Number of tracklets
         AliAnalysisTaskMyTask(const AliAnalysisTaskMyTask&); // not implemented
         AliAnalysisTaskMyTask& operator=(const AliAnalysisTaskMyTask&); // not implemented
 

@@ -35,17 +35,15 @@ using namespace std;            // std namespace: so you can do things like 'cou
 ClassImp(AliAnalysisTaskMyTask) // classimp: necessary for root
 
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask() : AliAnalysisTaskSE(), 
-    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
 }
 //_____________________________________________________________________________
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask(const char* name) : AliAnalysisTaskSE(name),
-    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0)
 {
-    if(!fTriggerCounter.empty())
-        fTriggerCounter.clear();
     // constructor
     DefineInput(0, TChain::Class());    // define the input of the analysis: in this case we take a 'chain' of events
                                         // this chain is created by the analysis manager, so no need to worry about it, 
@@ -62,8 +60,6 @@ AliAnalysisTaskMyTask::~AliAnalysisTaskMyTask()
     if(fOutputList) {
         delete fOutputList;     // at the end of your task, it is deleted from memory by calling this function
     }
-    if(!fTriggerCounter.empty())
-        fTriggerCounter.clear();
 }
 //_____________________________________________________________________________
 void AliAnalysisTaskMyTask::UserCreateOutputObjects()
@@ -86,6 +82,34 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
     fHistPt = new TH1F("fHistPt", "fHistPt", 100, 0, 10);       // create your histogra
     fHistTriggerOffline = new TH1I("hTrig", "BITs in Offline Trigger", 32, 0, 32);
     fHistTriggerClass = new TH1F("hTC","Trigger class codes", 3, 0, 3);
+    fHistTrackEta = new TH1F("hEta","Eta of tracks", 200, -10, 10);
+    fHistTpcNClusters = new TH1I("hTpcNcls", "Number of TPC clusters",160, 0, 160);
+    fHistTpcChi2PerCluster = new TH1F("hTpcChi2", "TPC chi-square per cluster", 1000, 0, 1000);
+    fHistDcaX = new TH1F("hDcaX", "Track DCA X position (kIsDCA)", 200, -10, 10);
+    fHistDcaY = new TH1F("hDcaY", "Track DCA Y position (kIsDCA)", 200, -10, 10);
+    fHistDcaZ = new TH1F("hDcaZ", "Track DCA Z position (kIsDCA)", 200, -10, 10);
+    fHistDcaXY = new TH1F("hDcaXY", "Track DCA XY length (kIsDCA)", 200, 0, 20);
+    fHistVertexZ = new TH1F("hVtxZ", "Primary vertex Z",200, -100, 100);
+    fHistVertexZSpd = new TH1F("hVtxZSpd", "Primary vertex Z (SPD)",200, -100, 100);
+    fHistVertexZTpc = new TH1F("hVtxZTpc", "Primary vertex Z (TPC)",200, -100, 100);
+    fHistMultNtracklets = new TH1F("hMultNtr", "Multiplicity with number of tracklets", 1000, 0, 1000);
+    fHistMultESDTracks = new TH1F("hMultESD", "Multiplicity with number of ESD tracks", 1000, 0, 1000);
+    fHistMultV0A = new TH1F("hMultV0A", "Multiplicity with number of V0 amplitude - A side", 1000, 0, 1000);
+    fHistMultV0C = new TH1F("hMultV0C", "Multiplicity with number of V0 amplitude - C side", 1000, 0, 1000);
+    fOutputList->Add(fHistTrackEta);
+    fOutputList->Add(fHistTpcNClusters);
+    fOutputList->Add(fHistTpcChi2PerCluster);
+    fOutputList->Add(fHistDcaX);
+    fOutputList->Add(fHistDcaY);
+    fOutputList->Add(fHistDcaZ);
+    fOutputList->Add(fHistDcaXY);
+    fOutputList->Add(fHistVertexZ);
+    fOutputList->Add(fHistVertexZSpd);
+    fOutputList->Add(fHistVertexZTpc);
+    fOutputList->Add(fHistMultNtracklets);
+    fOutputList->Add(fHistMultESDTracks);
+    fOutputList->Add(fHistMultV0A);
+    fOutputList->Add(fHistMultV0C);
     fOutputList->Add(fHistTriggerClass);
     fOutputList->Add(fHistTriggerOffline);
     fOutputList->Add(fHistPt);          // don't forget to add it to the list! the list will be written to file, so if you want
@@ -113,23 +137,49 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     Int_t iTracks(fAOD->GetNumberOfTracks());           // see how many tracks there are in the event
     for(Int_t i(0); i < iTracks; i++) {                 // loop ove rall these tracks
         AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
-        if(!track || !track->TestFilterBit(1)) continue;                            // if we failed, skip this track
-        fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
-    }
+        if(!track) continue;
+        if(track->TestFilterBit(AliAODTrack::kTrkTPCOnly)){                 // Pre-defined trackt cut
+            fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
+            fHistTrackEta->Fill(track->Eta());
+            fHistTpcNClusters->Fill(track->GetTPCNcls());
+            if(track->GetTPCNcls() > 0)
+                fHistTpcChi2PerCluster->Fill(track->GetTPCchi2()/track->GetTPCNcls());
+            else
+                fHistTpcChi2PerCluster->Fill(-1); // under flow - Bin(0)
+        }// END - TPC only tracks
+
+        // Check DCA to avoid dummy values
+        if(track->TestBit(AliAODTrack::kIsDCA)){
+            Double_t x = track->XAtDCA();
+            Double_t y = track->YAtDCA();
+            Double_t z = track->ZAtDCA();
+            Double_t xy = TMath::Sqrt(x*x+y*y);
+            fHistDcaX->Fill(x);
+            fHistDcaY->Fill(y);
+            fHistDcaZ->Fill(z);
+            fHistDcaXY->Fill(xy);
+        }
+    }// END - Track
     
+    // Primary vertex
+    fHistVertexZ->Fill(fAOD->GetPrimaryVertex()->GetZ());
+    fHistVertexZSpd->Fill(fAOD->GetPrimaryVertexSPD()->GetZ());
+    fHistVertexZTpc->Fill(fAOD->GetPrimaryVertexTPC()->GetZ());
+
+    // Multiplicity
+    fHistMultNtracklets->Fill(fAOD->GetMultiplicity()->GetNumberOfTracklets());
+    fHistMultESDTracks->Fill(fAOD->GetNumberOfESDTracks());
+    fHistMultV0A->Fill(fAOD->GetVZEROData()->GetMTotV0A());
+    fHistMultV0C->Fill(fAOD->GetVZEROData()->GetMTotV0C());
+
     // Fill offline trigger histogram
     ULong64_t  trigOffline = static_cast<AliVAODHeader*>(fAOD->GetHeader())->GetOfflineTrigger();
-        // DEBUG
-    cout << "[-] EXTRACT - Offline Trigger : " << hex << trigOffline << endl;
     if(!trigOffline) fHistTriggerOffline->Fill(0);
-    cout << "\t\t";
     for(int i = 0 ; i < 32 && (trigOffline>>i); i++){
         if((trigOffline >> i) % 2){
-            cout << dec << i << " ";
             fHistTriggerOffline->Fill(i);
         }
     }// Loop for all bits
-    cout << endl;
     // END - Fill offline trigger histogram
 
     // Handle string of fired trigger classes
@@ -137,7 +187,6 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     TObjArray* arr = trigClassed.Tokenize(" ");
     for(int i = 0; i < arr->GetEntries(); i++){
         TObjString* token = (TObjString*)(arr->At(i));
-        fTriggerCounter[token->String()] ++;
         fHistTriggerClass->Fill(token->String(), 1);
     }
     arr->Delete();
@@ -149,22 +198,11 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
                                                         // the output manager which will take care of writing
                                                         // it to a file
 
-    // Test - extract info. from AOD event
-    cout << "[-] EXTRACT - TriggerMask : " << hex << fAOD->GetTriggerMask() << endl;
-    cout << "[-] EXTRACT - TriggerMaskNext50 : " << hex << fAOD->GetTriggerMaskNext50() << endl;
-    cout << "[-] EXTRACT - TriggerCluster : " << dec << int(fAOD->GetTriggerCluster()) << endl;
-    cout << "[-] EXTRACT - FiredTriggerClasses : " << fAOD->GetFiredTriggerClasses() << endl;
 }
 //_____________________________________________________________________________
 void AliAnalysisTaskMyTask::Terminate(Option_t *)
 {
     // terminate
     // called at the END of the analysis (when all events are processed)
-    cout << "[-] EXTRACT - Fired Trigger Classed Counter" << endl;
-    for(std::map<TString, ULong_t>::iterator iter = fTriggerCounter.begin();
-        iter != fTriggerCounter.end(); iter++)
-    {
-        cout << "\t" << iter->first << "\t" << iter->second << endl;
-    }
 }
 //_____________________________________________________________________________
