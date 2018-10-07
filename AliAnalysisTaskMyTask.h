@@ -41,6 +41,9 @@ class AliAnalysisTaskMyTask : public AliAnalysisTaskSE
         TH1F*                   fHistMultV0A;   // Number of tracklets
         TH1F*                   fHistMultV0C;   // Number of tracklets
         TH2F*                   fH2MultVtxZ;   // Multiplicity distribution as function of vertex Z
+        TH1F*                   fHistEmcalMB; // EMCal energy in MB
+        TH1F*                   fHistEmcalEG1; // EMCal energy in EG1
+        TH1F*                   fHistEmcalEG2; // EMCal energy in EG2
         AliAnalysisTaskMyTask(const AliAnalysisTaskMyTask&); // not implemented
         AliAnalysisTaskMyTask& operator=(const AliAnalysisTaskMyTask&); // not implemented
 

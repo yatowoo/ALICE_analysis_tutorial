@@ -35,14 +35,14 @@ using namespace std;            // std namespace: so you can do things like 'cou
 ClassImp(AliAnalysisTaskMyTask) // classimp: necessary for root
 
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask() : AliAnalysisTaskSE(), 
-    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0), fH2MultVtxZ(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0), fH2MultVtxZ(0), fHistEmcalMB(0), fHistEmcalEG1(0), fHistEmcalEG2(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
 }
 //_____________________________________________________________________________
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask(const char* name) : AliAnalysisTaskSE(name),
-    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0), fH2MultVtxZ(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistTriggerOffline(0), fHistTriggerClass(0), fHistTrackEta(0), fHistTpcNClusters(0), fHistTpcChi2PerCluster(0), fHistDcaX(0), fHistDcaY(0), fHistDcaZ(0), fHistDcaXY(0), fHistVertexZ(0), fHistVertexZSpd(0), fHistVertexZTpc(0), fHistMultNtracklets(0), fHistMultESDTracks(0), fHistMultV0A(0), fHistMultV0C(0), fH2MultVtxZ(0), fHistEmcalMB(0), fHistEmcalEG1(0), fHistEmcalEG2(0)
 {
     // constructor
     DefineInput(0, TChain::Class());    // define the input of the analysis: in this case we take a 'chain' of events
@@ -98,6 +98,12 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
     fHistMultV0A = new TH1F("hMultV0A", "Multiplicity with number of V0 amplitude - A side", 200, 0, 200);
     fHistMultV0C = new TH1F("hMultV0C", "Multiplicity with number of V0 amplitude - C side", 500, 0, 500);
     fH2MultVtxZ = new TH2F("h2MultVtxZ", "Multiplicity vs Vertex Z", 1000, -50, 50, 200, 0, 200);
+    fHistEmcalMB = new TH1F("hEmcalMB", "EMCal Energy in MB", 500, 0, 50);
+    fHistEmcalEG1 = new TH1F("hEmcalEG1", "EMCal Energy in EG1", 500, 0, 50);
+    fHistEmcalEG2 = new TH1F("hEmcalEG2", "EMCal Energy in EG2", 500, 0, 50);
+    fOutputList->Add(fHistEmcalMB);
+    fOutputList->Add(fHistEmcalEG1);
+    fOutputList->Add(fHistEmcalEG2);
     fOutputList->Add(fHistTrackEta);
     fOutputList->Add(fHistTpcNClusters);
     fOutputList->Add(fHistTpcChi2PerCluster);
@@ -137,32 +143,7 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     if(!fAOD) return;                                   // if the pointer to the event is empty (getting it failed) skip this event
         // example part: i'll show how to loop over the tracks in an event 
         // and extract some information from them which we'll store in a histogram
-    Int_t iTracks(fAOD->GetNumberOfTracks());           // see how many tracks there are in the event
-    for(Int_t i(0); i < iTracks; i++) {                 // loop ove rall these tracks
-        AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
-        if(!track) continue;
 
-        fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
-        fHistTrackEta->Fill(track->Eta());
-        fHistTpcNClusters->Fill(track->GetTPCNcls());
-        if(track->GetTPCNcls() > 0)
-            fHistTpcChi2PerCluster->Fill(track->GetTPCchi2()/track->GetTPCNcls());
-        else
-            fHistTpcChi2PerCluster->Fill(-1); // under flow - Bin(0)
-
-        // Check DCA to avoid dummy values
-        if(track->TestBit(AliAODTrack::kIsDCA)){
-            Double_t x = track->XAtDCA();
-            Double_t y = track->YAtDCA();
-            Double_t z = track->ZAtDCA();
-            Double_t xy = TMath::Sqrt(x*x+y*y);
-            fHistDcaX->Fill(x);
-            fHistDcaY->Fill(y);
-            fHistDcaZ->Fill(z);
-            fHistDcaXY->Fill(xy);
-        }
-    }// END - Track
-    
     // Primary vertex
     Double_t vtxZ = fAOD->GetPrimaryVertex()->GetZ();
     fHistVertexZ->Fill(vtxZ);
@@ -189,8 +170,8 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     // END - Fill offline trigger histogram
 
     // Handle string of fired trigger classes
-    TString trigClassed = fAOD->GetFiredTriggerClasses();
-    TObjArray* arr = trigClassed.Tokenize(" ");
+    TString trigClass = fAOD->GetFiredTriggerClasses();
+    TObjArray* arr = trigClass.Tokenize(" ");
     for(int i = 0; i < arr->GetEntries(); i++){
         TObjString* token = (TObjString*)(arr->At(i));
         TString tccode = token->String();
@@ -201,6 +182,47 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     delete arr;
     // END - Handle string of fired trigger classes
 
+    // Tracks
+    Int_t iTracks(fAOD->GetNumberOfTracks());           // see how many tracks there are in the event
+    for(Int_t i(0); i < iTracks; i++) {                 // loop ove rall these tracks
+        AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
+        if(!track) continue;
+
+        fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
+        fHistTrackEta->Fill(track->Eta());
+        fHistTpcNClusters->Fill(track->GetTPCNcls());
+        if(track->GetTPCNcls() > 0)
+            fHistTpcChi2PerCluster->Fill(track->GetTPCchi2()/track->GetTPCNcls());
+        else
+            fHistTpcChi2PerCluster->Fill(-1); // under flow - Bin(0)
+
+        // Check DCA to avoid dummy values
+        if(track->TestBit(AliAODTrack::kIsDCA)){
+            Double_t x = track->XAtDCA();
+            Double_t y = track->YAtDCA();
+            Double_t z = track->ZAtDCA();
+            Double_t xy = TMath::Sqrt(x*x+y*y);
+            fHistDcaX->Fill(x);
+            fHistDcaY->Fill(y);
+            fHistDcaZ->Fill(z);
+            fHistDcaXY->Fill(xy);
+        }
+
+        Int_t nMatchCluster = track->GetEMCALcluster();
+        if(nMatchCluster > -1){
+            AliVCluster* emcalCluster = fAOD->GetCaloCluster(nMatchCluster);
+            if(emcalCluster){
+                if(emcalCluster->IsEMCAL()){
+                    Double_t emcalE = emcalCluster->E();
+                    if(trigClass.Contains("EG1")) fHistEmcalEG1->Fill(emcalE);
+                    else if(trigClass.Contains("EG2")) fHistEmcalEG2->Fill(emcalE);
+                    else if(trigClass.Contains("INT7")) fHistEmcalMB->Fill(emcalE);
+                }
+            }
+        }// Check EMCal cluster
+
+    }// END - Track
+    
                                                        // continue until all the tracks are processed
     PostData(1, fOutputList);                           // stream the results the analysis of this event to
                                                         // the output manager which will take care of writing

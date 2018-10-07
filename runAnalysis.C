@@ -22,7 +22,7 @@ void runAnalysis()
 #endif
      
     // create the analysis manager
-    AliAnalysisManager *mgr = new AliAnalysisManager("AnalysisTaskExample");
+    AliAnalysisManager *mgr = new AliAnalysisManager("PreAnalysis");
     AliAODInputHandler *aodH = new AliAODInputHandler();
     mgr->SetInputEventHandler(aodH);
 
@@ -37,7 +37,7 @@ void runAnalysis()
 #else
     gROOT->LoadMacro("AliAnalysisTaskMyTask.cxx++g");
     gROOT->LoadMacro("AddMyTask.C");
-    AliAnalysisTaskMyTask *task = AddMyTask();
+    AliAnalysisTaskMyTask *task = AddMyTask("PreAna");
 #endif
 
 
@@ -72,7 +72,7 @@ void runAnalysis()
         // MC has no prefix, data has prefix 000
         alienHandler->SetRunPrefix("000");
         // runnumber
-        alienHandler->AddRunNumber("259888 259868 259867 259866 259860 259842 259841 259822 259788 259781 259756 259752 259751 259750 259748 259747 259711 259704 259703 259697 259668 259650 259649 259477 259473 259396 259395 259394 259389 259388 259382 259378 259342 259341 259340 259339 259336 259334 259307 259305 259302 259274 259273 259272 259271 259270 259269 259263 259164 259118 259117 259099 259096 259091 259090 259088 258964 258962");
+        alienHandler->AddRunNumber("259888 259868 259867 259866 259860");
         // number of files per subjob
         alienHandler->SetSplitMaxInputFileNumber(40);
         alienHandler->SetExecutable("myTask.sh");
@@ -90,8 +90,8 @@ void runAnalysis()
         alienHandler->SetMergeViaJDL(kTRUE);
 
         // define the output folders
-        alienHandler->SetGridWorkingDir("myWorkingDir");
-        alienHandler->SetGridOutputDir("myOutputDir");
+        alienHandler->SetGridWorkingDir("16l_PreAna");
+        alienHandler->SetGridOutputDir("OutputAOD");
 
         // connect the alien plugin to the manager
         mgr->SetGridHandler(alienHandler);
