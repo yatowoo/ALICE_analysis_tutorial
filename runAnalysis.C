@@ -74,10 +74,10 @@ void runAnalysis()
         // runnumber
         alienHandler->AddRunNumber("259888 259868 259867 259866 259860");
         // number of files per subjob
-        alienHandler->SetSplitMaxInputFileNumber(40);
+        alienHandler->SetSplitMaxInputFileNumber(20);
         alienHandler->SetExecutable("myTask.sh");
         // specify how many seconds your job may take
-        alienHandler->SetTTL(10000);
+        alienHandler->SetTTL(20000);
         alienHandler->SetJDLName("myTask.jdl");
 
         alienHandler->SetOutputToRunNo(kTRUE);
