@@ -6,6 +6,9 @@
 #define AliAnalysisTaskMyTask_H
 
 #include "AliAnalysisTaskSE.h"
+#include "AliPIDResponse.h"
+
+class AliPIDResponse;
 
 class AliAnalysisTaskMyTask : public AliAnalysisTaskSE  
 {
@@ -24,6 +27,8 @@ class AliAnalysisTaskMyTask : public AliAnalysisTaskSE
         TH1F*                   fHistPt;        //! dummy histogram
         TH1F*                   fHistVertexZ;   // Step 3
         TH1F*                   fHistCentral;   // Step 3
+        TH2F*                   fH2Pion;        // Step 5 - PID
+        AliPIDResponse*         fPIDResponse;   // Step 5 - PID
 
         AliAnalysisTaskMyTask(const AliAnalysisTaskMyTask&); // not implemented
         AliAnalysisTaskMyTask& operator=(const AliAnalysisTaskMyTask&); // not implemented

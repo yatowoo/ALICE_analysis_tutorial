@@ -35,6 +35,9 @@ void runAnalysis()
     gInterpreter->LoadMacro("AliAnalysisTaskMyTask.cxx++g");
     AliAnalysisTaskMyTask *task = reinterpret_cast<AliAnalysisTaskMyTask*>(gInterpreter->ExecuteMacro("AddMyTask.C"));
 #else
+    gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
+    AddTaskPIDResponse();
+
     gROOT->LoadMacro("AliAnalysisTaskMyTask.cxx++g");
     gROOT->LoadMacro("AddMyTask.C");
     AliAnalysisTaskMyTask *task = AddMyTask();
@@ -50,7 +53,7 @@ void runAnalysis()
         // if you want to run locally, we need to define some input
         TChain* chain = new TChain("aodTree");
         // add a few files to the chain (change this so that your local files are added)
-        chain->Add("/mnt/d/_Temp/AliAOD.root");
+        chain->Add("AliAOD.root");
         // start the analysis locally, reading the events from the tchain
         mgr->StartAnalysis("local", chain);
     } else {

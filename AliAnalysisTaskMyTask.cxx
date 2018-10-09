@@ -35,14 +35,14 @@ using namespace std;            // std namespace: so you can do things like 'cou
 ClassImp(AliAnalysisTaskMyTask) // classimp: necessary for root
 
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask() : AliAnalysisTaskSE(), 
-    fAOD(0), fOutputList(0), fHistPt(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistVertexZ(0), fHistCentral(0), fH2Pion(0), fPIDResponse(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
 }
 //_____________________________________________________________________________
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask(const char* name) : AliAnalysisTaskSE(name),
-    fAOD(0), fOutputList(0), fHistPt(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistVertexZ(0), fHistCentral(0), fH2Pion(0), fPIDResponse(0)
 {
     // constructor
     DefineInput(0, TChain::Class());    // define the input of the analysis: in this case we take a 'chain' of events
@@ -64,6 +64,12 @@ AliAnalysisTaskMyTask::~AliAnalysisTaskMyTask()
 //_____________________________________________________________________________
 void AliAnalysisTaskMyTask::UserCreateOutputObjects()
 {
+    AliAnalysisManager* mgr = AliAnalysisManager::GetAnalysisManager();
+    if(mgr){
+        AliInputEventHandler* handler = (AliInputEventHandler*)(mgr->GetInputEventHandler());
+        if(handler)
+            fPIDResponse = handler->GetPIDResponse();
+    }
     // create output objects
     //
     // this function is called ONCE at the start of your analysis (RUNTIME)
@@ -82,6 +88,8 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
     fHistPt = new TH1F("fHistPt", "fHistPt", 100, 0, 10);       // create your histogra
     fHistVertexZ = new TH1F("fHistVZ", "fHistVertexZ", 100, 0, 10);
     fHistCentral = new TH1F("fHistC", "fHistCentrality", 100, 0, 1.0);
+    fH2Pion = new TH2F("hPi","Pion PID - P vs TPC signal", 100, 0, 10, 100, 0, 200);
+    fOutputList->Add(fH2Pion);
     fOutputList->Add(fHistPt);          // don't forget to add it to the list! the list will be written to file, so if you want
     fOutputList->Add(fHistVertexZ);
     fOutputList->Add(fHistCentral);
@@ -110,6 +118,12 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
         AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
         if(!track || !track->TestFilterBit(1)) continue;                            // if we failed, skip this track
         fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
+
+        // Step 5 - PID for pion
+        Double_t piSignal = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
+        if(std::abs(piSignal) < 3)
+            fH2Pion->Fill(track->P(), track->GetTPCsignal());
+    
     }                                                   // continue until all the tracks are processed
     float vertexZ = fAOD->GetPrimaryVertex()->GetZ();
     fHistVertexZ->Fill(vertexZ);
