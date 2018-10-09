@@ -215,8 +215,8 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
                 if(emcalCluster->IsEMCAL()){
                     Double_t emcalE = emcalCluster->E();
                     if(trigClass.Contains("EG1")) fHistEmcalEG1->Fill(emcalE);
-                    else if(trigClass.Contains("EG2")) fHistEmcalEG2->Fill(emcalE);
-                    else if(trigClass.Contains("INT7")) fHistEmcalMB->Fill(emcalE);
+                    if(trigClass.Contains("EG2")) fHistEmcalEG2->Fill(emcalE);
+                    if(trigOffline & AliVEvent::kINT7) fHistEmcalMB->Fill(emcalE);
                 }
             }
         }// Check EMCal cluster
