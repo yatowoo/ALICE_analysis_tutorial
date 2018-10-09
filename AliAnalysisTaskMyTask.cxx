@@ -86,6 +86,7 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
 
     // example of a histogram
     fHistPt = new TH1F("fHistPt", "fHistPt", 100, 0, 10);       // create your histogra
+
     fHistVertexZ = new TH1F("fHistVZ", "fHistVertexZ", 100, 0, 10);
     fHistCentral = new TH1F("fHistC", "fHistCentrality", 100, 0, 1.0);
     fH2Pion = new TH2F("hPi","Pion PID - P vs TPC signal", 100, 0, 10, 100, 0, 200);
@@ -94,6 +95,8 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
     fOutputList->Add(fHistVertexZ);
     fOutputList->Add(fHistCentral);
                                         // your histogram in the output file, add it to the list!
+		fOutputList->Add(fHistEta);
+		fOutputList->Add(fHistPhi);
     
     PostData(1, fOutputList);           // postdata will notify the analysis manager of changes / updates to the 
                                         // fOutputList object. the manager will in the end take care of writing your output to file
@@ -116,8 +119,9 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     Int_t iTracks(fAOD->GetNumberOfTracks());           // see how many tracks there are in the event
     for(Int_t i(0); i < iTracks; i++) {                 // loop ove rall these tracks
         AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
-        if(!track || !track->TestFilterBit(1)) continue;                            // if we failed, skip this track
+        if(!track || !track->TestFilterBit(512)) continue;                            // if we failed, skip this track
         fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
+<<<<<<< HEAD
 
         // Step 5 - PID for pion
         Double_t piSignal = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
@@ -125,11 +129,18 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
             fH2Pion->Fill(track->P(), track->GetTPCsignal());
     
     }                                                   // continue until all the tracks are processed
+=======
+     		fHistEta->Fill(track->Eta());
+				fHistPhi->Fill(track->Phi());
+		}                                                   // continue until all the tracks are processed
+
+>>>>>>> 3aa41f129593d0473857e480325ea008327f4733
     float vertexZ = fAOD->GetPrimaryVertex()->GetZ();
     fHistVertexZ->Fill(vertexZ);
     float centrality = fAOD->GetCentrality()->GetCentralityPercentile("V0M");
     fHistCentral->Fill(centrality);
-    PostData(1, fOutputList);                           // stream the results the analysis of this event to
+    //printf("[+] DEBUG - VertexZ: %f, Centrality : %f\n", vertexZ, centrality);
+		PostData(1, fOutputList);                           // stream the results the analysis of this event to
                                                         // the output manager which will take care of writing
                                                         // it to a file
 }
