@@ -35,14 +35,14 @@ using namespace std;            // std namespace: so you can do things like 'cou
 ClassImp(AliAnalysisTaskMyTask) // classimp: necessary for root
 
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask() : AliAnalysisTaskSE(), 
-    fAOD(0), fOutputList(0), fHistPt(0), fHistVertexZ(0), fHistCentral(0), fH2Pion(0), fPIDResponse(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistVertexZ(0), fHistCentral(0), fH2TPCsignal(0), fH2PionTPC(0), fHistPionPt(0), fHistPionEta(0), fHistPionPhi(0), fPIDResponse(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
 }
 //_____________________________________________________________________________
 AliAnalysisTaskMyTask::AliAnalysisTaskMyTask(const char* name) : AliAnalysisTaskSE(name),
-    fAOD(0), fOutputList(0), fHistPt(0), fHistVertexZ(0), fHistCentral(0), fH2Pion(0), fPIDResponse(0)
+    fAOD(0), fOutputList(0), fHistPt(0), fHistVertexZ(0), fHistCentral(0), fH2TPCsignal(0), fH2PionTPC(0), fHistPionPt(0), fHistPionEta(0), fHistPionPhi(0),fPIDResponse(0)
 {
     // constructor
     DefineInput(0, TChain::Class());    // define the input of the analysis: in this case we take a 'chain' of events
@@ -89,8 +89,16 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
 
     fHistVertexZ = new TH1F("fHistVZ", "fHistVertexZ", 100, 0, 10);
     fHistCentral = new TH1F("fHistC", "fHistCentrality", 100, 0, 1.0);
-    fH2Pion = new TH2F("hPi","Pion PID - P vs TPC signal", 100, 0, 10, 100, 0, 200);
-    fOutputList->Add(fH2Pion);
+    fH2TPCsignal = new TH2F("hTPC","TPC signal for clarification", 500,0, 5, 200, 0, 200);
+    fH2PionTPC = new TH2F("hPi","Pion PID - P vs TPC signal", 500,0, 5, 200, 0, 200);
+    fHistPionPt = new TH1F("hPiPt", "Pion Transverse Momentum", 100, 0, 10);
+    fHistPionEta = new TH1F("hPiEta", "Pion Pseudorapidity", 50, -2, 2);
+    fHistPionPhi = new TH1F("hPiPhi", "Pion Azimuthal Angle", 100, 0, TMath::TwoPi());
+    fOutputList->Add(fHistPionPt);
+    fOutputList->Add(fHistPionEta);
+    fOutputList->Add(fHistPionPhi);
+    fOutputList->Add(fH2TPCsignal);
+    fOutputList->Add(fH2PionTPC);
     fOutputList->Add(fHistPt);          // don't forget to add it to the list! the list will be written to file, so if you want
     fOutputList->Add(fHistVertexZ);
     fOutputList->Add(fHistCentral);
@@ -117,13 +125,20 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     Int_t iTracks(fAOD->GetNumberOfTracks());           // see how many tracks there are in the event
     for(Int_t i(0); i < iTracks; i++) {                 // loop ove rall these tracks
         AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
-        if(!track || !track->TestFilterBit(512)) continue;                            // if we failed, skip this track
+        if(!track || !track->TestFilterBit(1)) continue;                            // if we failed, skip this track
         fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
 
         // Step 5 - PID for pion
+            // for comparison
+        fH2TPCsignal->Fill(track->P(), track->GetTPCsignal());
+            // pion by PID response
         Double_t piSignal = fPIDResponse->NumberOfSigmasTPC(track, AliPID::kPion);
-        if(std::abs(piSignal) < 3)
-            fH2Pion->Fill(track->P(), track->GetTPCsignal());
+        if(std::abs(piSignal) < 3){
+            fH2PionTPC->Fill(track->P(), track->GetTPCsignal());
+            fHistPionPt->Fill(track->Pt());
+            fHistPionEta->Fill(track->Eta());
+            fHistPionPhi->Fill(track->Phi());
+        }
     
     }                                                   // continue until all the tracks are processed
     float vertexZ = fAOD->GetPrimaryVertex()->GetZ();

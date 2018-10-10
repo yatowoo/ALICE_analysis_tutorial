@@ -27,7 +27,11 @@ class AliAnalysisTaskMyTask : public AliAnalysisTaskSE
         TH1F*                   fHistPt;        //! dummy histogram
         TH1F*                   fHistVertexZ;   // Step 3
         TH1F*                   fHistCentral;   // Step 3
-        TH2F*                   fH2Pion;        // Step 5 - PID
+        TH2F*                   fH2TPCsignal;   // Step 5 - before PID
+        TH2F*                   fH2PionTPC;     // Step 5 - PID
+        TH1F*                   fHistPionPt;    // Step 5 - PID
+        TH1F*                   fHistPionEta;    // Step 5 - PID
+        TH1F*                   fHistPionPhi;    // Step 5 - PID
         AliPIDResponse*         fPIDResponse;   // Step 5 - PID
 
         AliAnalysisTaskMyTask(const AliAnalysisTaskMyTask&); // not implemented
