@@ -38,6 +38,9 @@ void runAnalysis()
     gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
     AddTaskPIDResponse();
 
+    gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDqa.C");
+    AddTaskPIDqa("PIDqa.root");
+
     gROOT->LoadMacro("AliAnalysisTaskMyTask.cxx++g");
     gROOT->LoadMacro("AddMyTask.C");
     AliAnalysisTaskMyTask *task = AddMyTask();
