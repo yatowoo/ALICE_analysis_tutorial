@@ -8,7 +8,7 @@
 void runAnalysis()
 {
     // set if you want to run the analysis locally (kTRUE), or on grid (kFALSE)
-    Bool_t local = kFALSE;
+    Bool_t local = kTRUE;
     // if you run on grid, specify test mode (kTRUE) or full grid model (kFALSE)
     Bool_t gridTest = kFALSE;
     
@@ -35,9 +35,11 @@ void runAnalysis()
     gInterpreter->LoadMacro("AliAnalysisTaskMyTask.cxx++g");
     AliAnalysisTaskMyTask *task = reinterpret_cast<AliAnalysisTaskMyTask*>(gInterpreter->ExecuteMacro("AddMyTask.C"));
 #else
-    gROOT->LoadMacro("AliAnalysisTaskMyTask.cxx++g");
-    gROOT->LoadMacro("AddMyTask.C");
-    AliAnalysisTaskMyTask *task = AddMyTask("PreAna");
+    gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
+    AddTaskPIDResponse();
+
+    gROOT->LoadMacro("AddTask_cjahnke_JPsi.C");
+    AddTask_cjahnke_JPsi("11d", 2);
 #endif
 
 
@@ -50,7 +52,7 @@ void runAnalysis()
         // if you want to run locally, we need to define some input
         TChain* chain = new TChain("aodTree");
         // add a few files to the chain (change this so that your local files are added)
-        chain->Add("/mnt/d/HEP/DATA/AliAOD_16l_259888_pass1_002.root");
+        chain->Add("AliAOD.root");
         // start the analysis locally, reading the events from the tchain
         mgr->StartAnalysis("local", chain);
     } else {
