@@ -35,11 +35,14 @@ void runAnalysis()
     gInterpreter->LoadMacro("AliAnalysisTaskMyTask.cxx++g");
     AliAnalysisTaskMyTask *task = reinterpret_cast<AliAnalysisTaskMyTask*>(gInterpreter->ExecuteMacro("AddMyTask.C"));
 #else
+    //gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
+    //AddTaskPhysicsSelection();
+
     gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
     AddTaskPIDResponse();
 
     gROOT->LoadMacro("AddTask_cjahnke_JPsi.C");
-    AddTask_cjahnke_JPsi("11d", 2);
+    AddTask_cjahnke_JPsi("16l", 3, kFALSE, "ConfigJpsi_cj_pp", kFALSE, kFALSE, 1);
 #endif
 
 
@@ -77,10 +80,10 @@ void runAnalysis()
         alienHandler->AddRunNumber("259888 259868 259867 259866 259860");
         // number of files per subjob
         alienHandler->SetSplitMaxInputFileNumber(20);
-        alienHandler->SetExecutable("myTask.sh");
+        alienHandler->SetExecutable("cjTask.sh");
         // specify how many seconds your job may take
         alienHandler->SetTTL(20000);
-        alienHandler->SetJDLName("myTask.jdl");
+        alienHandler->SetJDLName("cjTask.jdl");
 
         alienHandler->SetOutputToRunNo(kTRUE);
         alienHandler->SetKeepLogs(kTRUE);
@@ -92,7 +95,7 @@ void runAnalysis()
         alienHandler->SetMergeViaJDL(kTRUE);
 
         // define the output folders
-        alienHandler->SetGridWorkingDir("16l_PreAna");
+        alienHandler->SetGridWorkingDir("16l_PreAna_CJ_EG1_Mult1");
         alienHandler->SetGridOutputDir("OutputAOD");
 
         // connect the alien plugin to the manager
