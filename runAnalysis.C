@@ -68,7 +68,7 @@ void runAnalysis()
         // if you want to run locally, we need to define some input
         TChain* chain = new TChain("aodTree");
         // add a few files to the chain (change this so that your local files are added)
-        chain->Add("AliAOD.root");
+        chain->Add("AliAODEvent.root");
         // start the analysis locally, reading the events from the tchain
         mgr->StartAnalysis("local", chain);
     } else {
@@ -77,7 +77,7 @@ void runAnalysis()
         // also specify the include (header) paths on grid
         alienHandler->AddIncludePath("-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
         // make sure your source files get copied to grid
-        alienHandler->SetAnalysisSource("AddTask_cjahnke_JPsi.C ConfigJpsi_cj_pp");
+        alienHandler->SetAdditionalLibs("AddTask_cjahnke_JPsi.C ConfigJpsi_cj_pp.C");
         // select the aliphysics version. all other packages
         // are LOADED AUTOMATICALLY!
         alienHandler->SetAliPhysicsVersion("vAN-20180305-1");
@@ -92,6 +92,7 @@ void runAnalysis()
         alienHandler->AddRunNumber("259888");
         // number of files per subjob
         alienHandler->SetSplitMaxInputFileNumber(20);
+        alienHandler->SetAnalysisMacro("cjAnalysis.C");
         alienHandler->SetExecutable("cjTask.sh");
         // specify how many seconds your job may take
         alienHandler->SetTTL(20000);
