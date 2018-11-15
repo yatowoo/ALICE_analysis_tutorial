@@ -82,6 +82,8 @@ AliAnalysisTask *AddTask_cjahnke_JPsi(char *period = "11d", Int_t trigger_index 
 		{
 			task->AddDielectron(jpsi);
 		}
+		// DEBUG - Find AliDielectron
+		cout << "[+] DEBUG - AliDielectron Address in task: " << jpsi << endl;
 	}
 
 	//moved to configuration file

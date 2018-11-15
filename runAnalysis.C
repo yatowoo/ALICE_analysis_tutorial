@@ -20,29 +20,42 @@ void runAnalysis()
     gROOT->ProcessLine(".include $ROOTSYS/include");
     gROOT->ProcessLine(".include $ALICE_ROOT/include");
 #endif
-     
+
     // create the analysis manager
     AliAnalysisManager *mgr = new AliAnalysisManager("PreAnalysis");
-    AliAODInputHandler *aodH = new AliAODInputHandler();
-    mgr->SetInputEventHandler(aodH);
+    //AliAODInputHandler *aodH = new AliAODInputHandler();
+    //mgr->SetInputEventHandler(aodH);
 
+    // From LEGO train DQ_pp_AOD
+    gROOT->LoadMacro(gSystem->ExpandPathName("$ALICE_ROOT/ANALYSIS/macros/train/AddAODHandler.C"));
+    AliVEventHandler *handler = AddAODHandler();
 
+    gROOT->LoadMacro(gSystem->ExpandPathName("$ALICE_ROOT/ANALYSIS/macros/train/AddAODOutputHandler.C"));
+    AliVEventHandler *handler = AddAODOutputHandler();
+    AliAnalysisManager::SetGlobalStr("kJetDeltaAODName", "");
+    AliAnalysisManager::SetGlobalInt("kFillAODForRun", 0);
+    AliAnalysisManager::SetGlobalInt("kFilterAOD", 0);
+    ((AliAODHandler *)handler)->SetFillAODforRun(kFALSE);
+    ((AliAODHandler *)handler)->SetNeedsHeaderReplication();
+//((AliAODHandler*)handler)->SetNeedsTracksBranchReplication();
+//((AliAODHandler*)handler)->SetNeedsVerticesBranchReplication();
+//((AliAODHandler*)handler)->SetCreateNonStandardAOD();
 
-    // compile the class and load the add task macro
-    // here we have to differentiate between using the just-in-time compiler
-    // from root6, or the interpreter of root5
+// compile the class and load the add task macro
+// here we have to differentiate between using the just-in-time compiler
+// from root6, or the interpreter of root5
 #if !defined (__CINT__) || defined (__CLING__)
     gInterpreter->LoadMacro("AliAnalysisTaskMyTask.cxx++g");
     AliAnalysisTaskMyTask *task = reinterpret_cast<AliAnalysisTaskMyTask*>(gInterpreter->ExecuteMacro("AddMyTask.C"));
 #else
-    //gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
-    //AddTaskPhysicsSelection();
+    gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
+    AddTaskPhysicsSelection(kFALSE, kTRUE);
 
     gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
     AddTaskPIDResponse();
 
     gROOT->LoadMacro("AddTask_cjahnke_JPsi.C");
-    AddTask_cjahnke_JPsi("16l", 3, kFALSE, "ConfigJpsi_cj_pp", kFALSE, kFALSE, 1);
+    AddTask_cjahnke_JPsi("16l", 3, kFALSE, "ConfigJpsi_cj_pp", kFALSE, kFALSE, 0);
 #endif
 
 
@@ -64,8 +77,7 @@ void runAnalysis()
         // also specify the include (header) paths on grid
         alienHandler->AddIncludePath("-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
         // make sure your source files get copied to grid
-        alienHandler->SetAdditionalLibs("AliAnalysisTaskMyTask.cxx AliAnalysisTaskMyTask.h");
-        alienHandler->SetAnalysisSource("AliAnalysisTaskMyTask.cxx");
+        alienHandler->SetAnalysisSource("AddTask_cjahnke_JPsi.C ConfigJpsi_cj_pp");
         // select the aliphysics version. all other packages
         // are LOADED AUTOMATICALLY!
         alienHandler->SetAliPhysicsVersion("vAN-20180305-1");
@@ -77,7 +89,7 @@ void runAnalysis()
         // MC has no prefix, data has prefix 000
         alienHandler->SetRunPrefix("000");
         // runnumber
-        alienHandler->AddRunNumber("259888 259868 259867 259866 259860");
+        alienHandler->AddRunNumber("259888");
         // number of files per subjob
         alienHandler->SetSplitMaxInputFileNumber(20);
         alienHandler->SetExecutable("cjTask.sh");
@@ -95,7 +107,7 @@ void runAnalysis()
         alienHandler->SetMergeViaJDL(kTRUE);
 
         // define the output folders
-        alienHandler->SetGridWorkingDir("16l_PreAna_CJ_EG1_Mult1");
+        alienHandler->SetGridWorkingDir("16l_PreAna_CJ_EG1_test");
         alienHandler->SetGridOutputDir("OutputAOD");
 
         // connect the alien plugin to the manager
