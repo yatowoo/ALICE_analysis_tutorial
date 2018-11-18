@@ -5,3 +5,6 @@
 *.root
 *.xml
 *.pcm
+output/
+.vscode/
+myAnalysis.C

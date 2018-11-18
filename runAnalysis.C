@@ -5,13 +5,10 @@
 #include "AliAnalysisTaskMyTask.h"
 #endif
 
-void runAnalysis()
+// Mode : local, test, full, merge, final
+void runAnalysis(TString mode="local")
 {
-    // set if you want to run the analysis locally (kTRUE), or on grid (kFALSE)
-    Bool_t local = kTRUE;
-    // if you run on grid, specify test mode (kTRUE) or full grid model (kFALSE)
-    Bool_t gridTest = kTRUE;
-    
+    TString task_name = "myTask";
     // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
     gInterpreter->ProcessLine(".include $ROOTSYS/include");
@@ -46,11 +43,11 @@ void runAnalysis()
     mgr->PrintStatus();
     mgr->SetUseProgressBar(1, 25);
 
-    if(local) {
+    if(mode == "local") {
         // if you want to run locally, we need to define some input
         TChain* chain = new TChain("aodTree");
         // add a few files to the chain (change this so that your local files are added)
-        chain->Add("AliAOD.root");
+        chain->Add("AliAOD_input.root");
         // start the analysis locally, reading the events from the tchain
         mgr->StartAnalysis("local", chain);
     } else {
@@ -75,10 +72,13 @@ void runAnalysis()
         alienHandler->AddRunNumber(167813);
         // number of files per subjob
         alienHandler->SetSplitMaxInputFileNumber(40);
-        alienHandler->SetExecutable("myTask.sh");
         // specify how many seconds your job may take
         alienHandler->SetTTL(10000);
-        alienHandler->SetJDLName("myTask.jdl");
+
+        // Automatical generated files
+        alienHandler->SetAnalysisMacro(task_name + ".C");
+        alienHandler->SetExecutable(task_name + ".sh");
+        alienHandler->SetJDLName(task_name + ".jdl");
 
         alienHandler->SetOutputToRunNo(kTRUE);
         alienHandler->SetKeepLogs(kTRUE);
@@ -87,7 +87,10 @@ void runAnalysis()
         // (see below) mode, set SetMergeViaJDL(kFALSE) 
         // to collect final results
         alienHandler->SetMaxMergeStages(1);
-        alienHandler->SetMergeViaJDL(kTRUE);
+        if(mode == "final")
+            alienHandler->SetMergeViaJDL(kFALSE);
+        else
+            alienHandler->SetMergeViaJDL(kTRUE);
 
         // define the output folders
         alienHandler->SetGridWorkingDir("myWorkingDir");
@@ -95,16 +98,21 @@ void runAnalysis()
 
         // connect the alien plugin to the manager
         mgr->SetGridHandler(alienHandler);
-        if(gridTest) {
+        if(mode == "test") {
             // speficy on how many files you want to run
             alienHandler->SetNtestFiles(1);
             // and launch the analysis
             alienHandler->SetRunMode("test");
-            mgr->StartAnalysis("grid");
-        } else {
+            
+        } else if(mode == "full"){
             // else launch the full grid analysis
             alienHandler->SetRunMode("full");
-            mgr->StartAnalysis("grid");
+        } else if(mode == "merge") {
+            alienHandler->SetRunMode("terminate");
+        } else{
+            cout << "[X] Error - Unknown mode : " << mode << endl;
+            exit(1);
         }
+        mgr->StartAnalysis("grid");
     }
 }
